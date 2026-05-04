@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+#DEBHELPER#
+
+case "$1" in
+  configure)
+    # deb-systemd-helper does not support template unit instances —
+    # systemctl is used directly (see debian/moonpi.lintian-overrides)
+    if [ -d /run/systemd/system ]; then
+      systemctl daemon-reload                        || true
+      systemctl enable moonpi@tty2.service           || true
+      systemctl enable switch-to-tty2.service        || true
+      systemctl start  moonpi@tty2.service           || true
+      systemctl start  switch-to-tty2.service        || true
+    else
+      deb-systemd-helper enable moonpi@tty2.service    || true
+      deb-systemd-helper enable switch-to-tty2.service || true
+    fi
+    ;;
+esac
+
+exit 0

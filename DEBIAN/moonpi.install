@@ -1,0 +1,18 @@
+# lintian overrides
+debian/moonpi.lintian-overrides                 usr/share/lintian/overrides/
+
+# configuration
+etc/moonpi/moonpi.conf                         etc/moonpi/
+
+# binaries
+usr/bin/moonpi                                  usr/bin/
+usr/bin/moonpi-safe                             usr/bin/
+
+# systemd units
+usr/lib/systemd/system/moonpi@.service          usr/lib/systemd/system/
+usr/lib/systemd/system/switch-to-tty2.service   usr/lib/systemd/system/
+debian/66-moonpi.preset                         usr/lib/systemd/system-preset/
+
+# manpages
+usr/share/man/man1/moonpi.1                     usr/share/man/man1/
+usr/share/man/man1/moonpi-safe.1                usr/share/man/man1/

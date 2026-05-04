@@ -1,0 +1,28 @@
+[Unit]
+Description=MoonPi Launcher on %I
+After=systemd-user-sessions.service
+# this makes systemd stop getty@tty2.service before launching your unit
+Conflicts=getty@%i.service
+Before=getty@%i.service
+
+[Service]
+Type=simple
+User=moonpi
+Group=moonpi
+
+StandardInput=tty
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/%i
+TTYReset=yes
+TTYVHangup=yes
+
+Restart=always
+RestartSec=3
+
+Environment=TERM=linux
+
+ExecStart=/usr/bin/moonpi
+
+[Install]
+WantedBy=multi-user.target

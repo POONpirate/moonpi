@@ -1,0 +1,4 @@
+# deb-systemd-helper does not support enabling/starting template unit instances
+# (e.g. moonpi@tty2.service from moonpi@.service). systemctl is called directly
+# as the only reliable alternative.
+moonpi binary: maintainer-script-calls-systemctl

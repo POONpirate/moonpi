@@ -1,0 +1,2 @@
+# Enable our console launcher on install
+enable moonpi@*.service

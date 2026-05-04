@@ -1,0 +1,25 @@
+#!/bin/sh
+#DEBHELPER#
+set -e
+
+case "$1" in
+  install)
+    CONFIG_PATH="/boot/firmware/config.txt"
+
+    if [ -f "$CONFIG_PATH" ] && grep -q "^dtoverlay=vc4-kms-v3d" "$CONFIG_PATH"; then
+        echo "🔧 Patching $CONFIG_PATH for FKMS overlay..."
+        sed -i '/^dtoverlay=vc4-kms-v3d/ {
+            s/dtoverlay=vc4-kms-v3d/dtoverlay=vc4-fkms-v3d/
+            a gpu_mem=256
+        }' "$CONFIG_PATH"
+    fi
+
+    # Create moonpi service account if it doesn't exist — locked, no password login
+    if ! id "moonpi" >/dev/null 2>&1; then
+        useradd -m -s /bin/bash -G input,video,audio,render moonpi
+        passwd -l moonpi
+    fi
+    ;;
+esac
+
+exit 0

@@ -1,0 +1,3 @@
+switch-to-tty2.service
+moonpi@tty2.service
+getty@tty2.service

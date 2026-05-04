@@ -1,0 +1,17 @@
+Source: moonpi
+Section: utils
+Priority: optional
+Maintainer: POONpirate <kellyzekilla@hotmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://github.com/POONpirate/moonpi
+
+Package: moonpi
+Architecture: armhf
+Depends: ${misc:Depends}, psmisc, procps, ncurses-bin, kbd
+Pre-Depends: moonlight-embedded
+Description: lightweight Moonlight launcher for Raspberry Pi
+ A streamlined launcher for Moonlight Embedded, designed to simplify
+ game streaming setup on Raspberry Pi. Includes autologin, GPU tweaks,
+ and controller support out of the box.
+

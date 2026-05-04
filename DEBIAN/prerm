@@ -1,0 +1,32 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  remove|purge)
+    # Switch back to desktop (tty7) if a compositor/X server is running, otherwise fall back to tty1
+    if fuser /dev/tty7 >/dev/null 2>&1 || \
+       pgrep -x labwc >/dev/null 2>&1 || pgrep -x wayfire >/dev/null 2>&1 || \
+       pgrep -x weston >/dev/null 2>&1 || pgrep -x Xorg   >/dev/null 2>&1; then
+      chvt 7 || true
+    else
+      chvt 1 || true
+    fi
+
+    # deb-systemd-helper does not support template unit instances —
+    # systemctl is used directly (see debian/moonpi.lintian-overrides)
+    if [ -d /run/systemd/system ]; then
+      systemctl stop    moonpi@tty2.service    || true
+      systemctl disable moonpi@tty2.service    || true
+      systemctl stop    switch-to-tty2.service || true
+      systemctl disable switch-to-tty2.service || true
+      systemctl daemon-reload                  || true
+    else
+      deb-systemd-helper disable moonpi@tty2.service    || true
+      deb-systemd-helper disable switch-to-tty2.service || true
+    fi
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

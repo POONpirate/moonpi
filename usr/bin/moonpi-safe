@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+#
+# moonlight-safe.sh — clean shutdown wrapper for Moonlight Embedded
+
+if [[ -z "$1" ]]; then
+  echo "Usage: $0 <host-ip> [moonlight args]"
+  exit 1
+fi
+
+HOST="$1"
+shift  # remove IP from arg list, pass the rest to moonlight
+
+# On Ctrl-C or kill, send quit to host then exit
+cleanup(){
+  echo
+  echo "[$(date +%H:%M:%S)] sending quit to host $HOST…"
+  moonlight quit "$HOST" &    # fire off the quit command in background
+  exit                        # return immediately to launcher
+}
+trap cleanup SIGINT SIGTERM
+
+# 1) start the stream (no exec — keep this process alive so trap and cleanup run)
+echo "[$(date +%H:%M:%S)] starting Moonlight to $HOST…"
+moonlight stream "$@" "$HOST"
+RC=$?
+
+# 2) once it exits cleanly, ask host to quit that session
+echo "[$(date +%H:%M:%S)] stream ended (rc=$RC), sending quit to host $HOST…"
+moonlight quit "$HOST"
+
+exit $RC

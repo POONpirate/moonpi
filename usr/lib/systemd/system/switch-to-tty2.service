@@ -1,0 +1,12 @@
+[Unit]
+Description=Switch to tty2 after graphical startup
+DefaultDependencies=no
+After=graphical.target moonpi@tty2.service
+Wants=graphical.target
+
+[Service]
+Type=idle
+ExecStart=/bin/chvt 2
+
+[Install]
+WantedBy=graphical.target
