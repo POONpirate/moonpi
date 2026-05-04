@@ -8,7 +8,7 @@ Homepage: https://github.com/POONpirate/moonpi
 
 Package: moonpi
 Architecture: armhf
-Depends: ${misc:Depends}, psmisc, procps, ncurses-bin, kbd
+Depends: ${misc:Depends}, psmisc, procps, kbd
 Pre-Depends: moonlight-embedded
 Description: lightweight Moonlight launcher for Raspberry Pi
  A streamlined launcher for Moonlight Embedded, designed to simplify
