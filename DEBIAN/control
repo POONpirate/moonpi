@@ -9,7 +9,6 @@ Homepage: https://github.com/POONpirate/moonpi
 Package: moonpi
 Architecture: armhf
 Depends: ${misc:Depends}, psmisc, procps, kbd
-Recommends: moonlight-embedded
 Description: lightweight Moonlight launcher for Raspberry Pi
  A streamlined launcher for Moonlight Embedded, designed to simplify
  game streaming setup on Raspberry Pi. Includes autologin, GPU tweaks,
