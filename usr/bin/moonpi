@@ -108,7 +108,7 @@ configurator() {
 
       2)  # App Name — try to discover from host first
         echo
-        echo "➡ Discovering apps on ${HOST_IP}…"
+        echo "➡ Discovering apps on ${HOST_IP}..."
         mapfile -t APPS < <(
           moonlight list "$HOST_IP" 2>/dev/null \
             | sed -n '2,$p' | sed -E 's/^[[:space:]]*[0-9]+\.[[:space:]]*//'
@@ -212,7 +212,7 @@ pair_moonlight() {
   read -p "What IP would you like to pair with? Default: ${HOST_IP}: " ip
   ip=${ip:-$HOST_IP}
 
-  echo "${BLUE}▶ Pairing with $ip…${RESET}"
+  echo "${BLUE}▶ Pairing with $ip...${RESET}"
   if moonlight pair "$ip"; then
     echo "${GREEN}✔ Pairing succeeded!${RESET}"
   else
@@ -220,7 +220,7 @@ pair_moonlight() {
   fi
 
   # Pause so the user can read the result
-  read -p "Press ENTER to return to menu…"
+  read -p "Press ENTER to return to menu..."
 }
 
 #Banner
@@ -339,19 +339,21 @@ while true; do
       pair_moonlight
       ;;
     4)
-      echo "${BLUE}Switching to VT1…${RESET}"
+      echo "${BLUE}Switching to VT1...${RESET}"
+      # Write a reminder to tty1 so it's waiting for the user when they arrive
+      printf "\n\033[1;34m[MoonPi]\033[0m Switched to console.\n\033[1mTo return to MoonPi, press Ctrl+Alt+F2\033[0m\n\n" | sudo -n tee /dev/tty1 > /dev/null
       sleep 3
       chvt 1
       ;;
     5)
       # only valid when MAX_OPTION=5
-      echo "${BLUE}Switching to desktop…${RESET}"
+      echo "${BLUE}Switching to desktop...${RESET}"
       sleep 3
       chvt 7
       ;;
     *)
       echo "${YELLOW}Invalid: '$action'${RESET}"
-      echo "Returning to menu in 3 seconds…"
+      echo "Returning to menu in 3 seconds..."
       sleep 3
       ;;
   esac

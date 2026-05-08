@@ -4,8 +4,9 @@ set -e
 
 case "$1" in
   configure)
-    # Allow all users to run chvt 2 without a password (for the desktop shortcut)
-    echo '%sudo ALL=(root) NOPASSWD: /usr/bin/chvt 2' > /etc/sudoers.d/moonpi
+    # Allow any user to run chvt 2 (for the desktop shortcut)
+    # Allow the moonpi service user to write to tty1 (for the exit-to-console message)
+    printf 'ALL ALL=(root) NOPASSWD: /usr/bin/chvt 2\nmoonpi ALL=(root) NOPASSWD: /usr/bin/tee /dev/tty1\n' > /etc/sudoers.d/moonpi
     chmod 440 /etc/sudoers.d/moonpi
 
     # deb-systemd-helper does not support template unit instances —
