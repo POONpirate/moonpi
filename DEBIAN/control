@@ -7,7 +7,7 @@ Standards-Version: 4.7.0
 Homepage: https://github.com/POONpirate/moonpi
 
 Package: moonpi
-Architecture: armhf
+Architecture: all
 Depends: ${misc:Depends}, psmisc, procps, kbd
 Description: lightweight Moonlight launcher for Raspberry Pi
  A streamlined launcher for Moonlight Embedded, designed to simplify

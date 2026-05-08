@@ -48,100 +48,162 @@ write_config() {
   mkdir -p "$(dirname "$target_cfg")"
 
   tee "$target_cfg" > /dev/null <<EOF
-HOST_IP="$host_ip"
-APP_NAME="$app_name"
-FPS="$fps"
-BITRATE="$bitrate"
-RESOLUTION_FLAG="$resolution_flag"
-CUSTOM_WIDTH="$w"
-CUSTOM_HEIGHT="$h"
-LOCAL_AUDIO="$local_audio"
+HOST_IP="${HOST_IP:-}"
+APP_NAME="${APP_NAME:-}"
+FPS="${FPS:-}"
+BITRATE="${BITRATE:-}"
+RESOLUTION_FLAG="${RESOLUTION_FLAG:-}"
+CUSTOM_WIDTH="${CUSTOM_WIDTH:-}"
+CUSTOM_HEIGHT="${CUSTOM_HEIGHT:-}"
+LOCAL_AUDIO="${LOCAL_AUDIO:-}"
 EOF
 
   chmod 644 "$target_cfg"
   echo "✅ Config saved to $target_cfg"
 }
 
-# Interactive configuration routine
-configurator() {
-  echo "${BLUE}🛠️  Configuring MoonPi…${RESET}"
-    w="${CUSTOM_WIDTH:-}"
-    h="${CUSTOM_HEIGHT:-}"
-
-
-
-  # 1) Host IP
-  read -p "➡ Enter host IP [${HOST_IP}]: " host_ip
-  host_ip=${host_ip:-$HOST_IP}
-
-  # 2) Discover or enter app name
-  echo
-  echo "➡ Discovering apps on $host_ip…"
-  mapfile -t APPS < <(
-    moonlight list "$host_ip" 2>/dev/null \
-      | sed -n '2,$p' | sed -E 's/^[[:space:]]*[0-9]+\.[[:space:]]*//'
-  )
-  if (( ${#APPS[@]} )); then
-    echo "${YELLOW}Available apps:${RESET}"
-    PS3=$'\nChoose an app [1-'$((${#APPS[@]}+1))']: '
-    select choice in "${APPS[@]}" "Enter manually"; do
-      if (( REPLY >= 1 && REPLY <= ${#APPS[@]} )); then
-        app_name="$choice"; break
-      elif (( REPLY == ${#APPS[@]}+1 )); then
-        read -p "➡ Enter app name manually: " app_name; break
-      else
-        echo "${RED}Invalid selection.${RESET}"
-      fi
-    done
-  else
-    echo "${YELLOW}⚠️  Could not fetch app list, falling back to manual entry${RESET}"
-    read -p "➡ Enter app name [${APP_NAME}]: " app_name
-    app_name=${app_name:-$APP_NAME}
+# Create a user config from current values if one doesn't exist yet
+ensure_user_cfg() {
+  if [[ ! -f $USER_CFG ]]; then
+    mkdir -p "$(dirname "$USER_CFG")"
+    write_config
+	draw_banner
+    echo "${YELLOW}ℹ️  No user config found — created one at $USER_CFG${RESET}"
+    sleep 4
   fi
+}
 
-  # 3) Resolution
-  echo
-  echo "${BLUE}Select resolution:${RESET}"
-  echo "  ${YELLOW}1)${RESET} 720p   (${BOLD}-720${RESET})"
-  echo "  ${YELLOW}2)${RESET} 1080p  (${BOLD}-1080${RESET})"
-  echo "  ${YELLOW}3)${RESET} 4K     (${BOLD}-4k${RESET})"
-  echo "  ${YELLOW}4)${RESET} Custom"
-  read -p "${GREEN}Choose [1–4, default:2]: ${RESET}" res_choice
-  res_choice=${res_choice:-2}
+# Interactive configuration routine — per-option submenu
+configurator() {
+  while true; do
+    draw_cfg_banner
 
-  case $res_choice in
-    1) resolution_flag="-720"; width_flag=(); height_flag=();;
-    2) resolution_flag="-1080"; width_flag=(); height_flag=();;
-    3) resolution_flag="-4k";  width_flag=(); height_flag=();;
-    4)
-      read -p "${GREEN}  → width [${CUSTOM_WIDTH}]: ${RESET}" w
-      read -p "${GREEN}  → height [${CUSTOM_HEIGHT}]: ${RESET}" h
-      w=${w:-$CUSTOM_WIDTH}; h=${h:-$CUSTOM_HEIGHT}
-      resolution_flag=""; width_flag=(-width "$w"); height_flag=(-height "$h")
-      ;;
-    *)
-      echo "${YELLOW}Invalid, defaulting to 1080p.${RESET}"
-      resolution_flag="-1080"; width_flag=(); height_flag=()
-      ;;
-  esac
+    # Format resolution for display
+    case "${RESOLUTION_FLAG:-}" in
+      -720)  res_display="720p"  ;;
+      -1080) res_display="1080p" ;;
+      -4k)   res_display="4K"   ;;
+      "")    res_display="Custom (${CUSTOM_WIDTH:-?}x${CUSTOM_HEIGHT:-?})" ;;
+      *)     res_display="${RESOLUTION_FLAG}" ;;
+    esac
 
-  # 4) FPS
-  echo
-  read -p "${GREEN}➡ Enter -fps [${FPS}]: ${RESET}" fps
-  fps=${fps:-$FPS}
+    echo "${BLUE}🛠️  MoonPi Configuration${RESET}"
+    echo
+    echo "${GREEN} 1)${RESET} Host IP       ${YELLOW}[${HOST_IP:-}]${RESET}"
+    echo "${GREEN} 2)${RESET} App Name      ${YELLOW}[${APP_NAME:-}]${RESET}"
+    echo "${GREEN} 3)${RESET} Resolution    ${YELLOW}[${res_display}]${RESET}"
+    echo "${GREEN} 4)${RESET} FPS           ${YELLOW}[${FPS:-}]${RESET}"
+    echo "${GREEN} 5)${RESET} Bitrate       ${YELLOW}[${BITRATE:-}]${RESET}"
+    echo "${GREEN} 6)${RESET} Local Audio   ${YELLOW}[${LOCAL_AUDIO:-}]${RESET}"
+    echo "${GREEN} 7)${RESET} Back"
+    echo
+    read -p "${BLUE}Choose [1–7]: ${RESET}" cfg_choice
 
-  # 5) Bitrate
-  read -p "${GREEN}➡ Enter -bitrate [${BITRATE}]: ${RESET}" bitrate
-  bitrate=${bitrate:-$BITRATE}
+    case $cfg_choice in
+      1)  # Host IP
+        read -p "➡ Enter host IP [${HOST_IP}]: " input
+        HOST_IP=${input:-$HOST_IP}
+        write_config; sleep 1
+        ;;
 
-  # 6) Local audio?
-  read -p "${GREEN}➡ Use local audio? (y/N): ${RESET}" la
-  la=${la,,}
-  if [[ $la =~ ^(y|yes)$ ]]; then local_audio="yes"; else local_audio="no"; fi
+      2)  # App Name — try to discover from host first
+        echo
+        echo "➡ Discovering apps on ${HOST_IP}…"
+        mapfile -t APPS < <(
+          moonlight list "$HOST_IP" 2>/dev/null \
+            | sed -n '2,$p' | sed -E 's/^[[:space:]]*[0-9]+\.[[:space:]]*//'
+        )
+        if (( ${#APPS[@]} )); then
+          echo "${YELLOW}Available apps:${RESET}"
+          PS3=$'\nChoose an app [1-'$((${#APPS[@]}+1))']: '
+          select choice in "${APPS[@]}" "Enter manually"; do
+            if (( REPLY >= 1 && REPLY <= ${#APPS[@]} )); then
+              APP_NAME="$choice"; break
+            elif (( REPLY == ${#APPS[@]}+1 )); then
+              read -p "➡ Enter app name manually: " APP_NAME; break
+            else
+              echo "${RED}Invalid selection.${RESET}"
+            fi
+          done
+        else
+          echo "${YELLOW}⚠️  Could not fetch app list, falling back to manual entry${RESET}"
+          read -p "➡ Enter app name [${APP_NAME}]: " input
+          APP_NAME=${input:-$APP_NAME}
+        fi
+        write_config; sleep 1
+        ;;
 
-  # Persist settings
-  write_config
-  sleep 2
+      3)  # Resolution
+        echo
+        echo "${BLUE}Select resolution:${RESET}"
+        echo "  ${YELLOW}1)${RESET} 720p"
+        echo "  ${YELLOW}2)${RESET} 1080p"
+        echo "  ${YELLOW}3)${RESET} 4K"
+        echo "  ${YELLOW}4)${RESET} Custom"
+        read -p "${GREEN}Choose [1–4]: ${RESET}" res_choice
+        case $res_choice in
+          1)
+            RESOLUTION_FLAG="-720"
+            CUSTOM_WIDTH=""; CUSTOM_HEIGHT=""
+            width_flag=(); height_flag=()
+            ;;
+          2)
+            RESOLUTION_FLAG="-1080"
+            CUSTOM_WIDTH=""; CUSTOM_HEIGHT=""
+            width_flag=(); height_flag=()
+            ;;
+          3)
+            RESOLUTION_FLAG="-4k"
+            CUSTOM_WIDTH=""; CUSTOM_HEIGHT=""
+            width_flag=(); height_flag=()
+            ;;
+          4)
+            read -p "${GREEN}  → width [${CUSTOM_WIDTH:-2560}]: ${RESET}" w
+            read -p "${GREEN}  → height [${CUSTOM_HEIGHT:-1440}]: ${RESET}" h
+            CUSTOM_WIDTH=${w:-${CUSTOM_WIDTH:-2560}}
+            CUSTOM_HEIGHT=${h:-${CUSTOM_HEIGHT:-1440}}
+            RESOLUTION_FLAG=""
+            width_flag=(-width "$CUSTOM_WIDTH")
+            height_flag=(-height "$CUSTOM_HEIGHT")
+            ;;
+          *)
+            echo "${YELLOW}Invalid choice, resolution unchanged.${RESET}"
+            sleep 1
+            continue
+            ;;
+        esac
+        write_config; sleep 1
+        ;;
+
+      4)  # FPS
+        read -p "➡ Enter FPS [${FPS}]: " input
+        FPS=${input:-$FPS}
+        write_config; sleep 1
+        ;;
+
+      5)  # Bitrate
+        read -p "➡ Enter bitrate in kbps [${BITRATE}]: " input
+        BITRATE=${input:-$BITRATE}
+        write_config; sleep 1
+        ;;
+
+      6)  # Local Audio
+        read -p "➡ Use local audio? (y/N) [current: ${LOCAL_AUDIO}]: " la
+        la=${la,,}
+        if [[ $la =~ ^(y|yes)$ ]]; then LOCAL_AUDIO="yes"; else LOCAL_AUDIO="no"; fi
+        write_config; sleep 1
+        ;;
+
+      7)  # Back
+        return
+        ;;
+
+      *)
+        echo "${YELLOW}Invalid selection.${RESET}"
+        sleep 1
+        ;;
+    esac
+  done
 }
 
 # A section to pair moonlight.
@@ -179,20 +241,31 @@ MOONPI
   echo "                 MoonPi Launcher v$VERSION"
   printf "%s" "${RESET}"
   echo "${YELLOW}      Plug-n-Play Moonlight Embedded Launcher${RESET}"
+  echo
+}
+draw_cfg_banner() {
+  clear
+  printf "%s" "${BOLD}${BLUE}"
+  cat <<'MOONPI'
+                                 ____            ____                       ___                                    __                   
+ /'\_/`\                        /\  _`\   __    /\  _`\                   /'___\ __                               /\ \__                
+/\      \    ___     ___     ___\ \ \L\ \/\_\   \ \ \/\_\    ___     ___ /\ \__//\_\     __   __  __  _ __    __  \ \ ,_\   ___   _ __  
+\ \ \__\ \  / __`\  / __`\ /' _ `\ \ ,__/\/\ \   \ \ \/_/_  / __`\ /' _ `\ \ ,__\/\ \  /'_ `\/\ \/\ \/\`'__\/'__`\ \ \ \/  / __`\/\`'__\
+ \ \ \_/\ \/\ \L\ \/\ \L\ \/\ \/\ \ \ \/  \ \ \   \ \ \L\ \/\ \L\ \/\ \/\ \ \ \_/\ \ \/\ \L\ \ \ \_\ \ \ \//\ \L\.\_\ \ \_/\ \L\ \ \ \/ 
+  \ \_\\ \_\ \____/\ \____/\ \_\ \_\ \_\   \ \_\   \ \____/\ \____/\ \_\ \_\ \_\  \ \_\ \____ \ \____/\ \_\\ \__/.\_\\ \__\ \____/\ \_\ 
+   \/_/ \/_/\/___/  \/___/  \/_/\/_/\/_/    \/_/    \/___/  \/___/  \/_/\/_/\/_/   \/_/\/___L\ \/___/  \/_/ \/__/\/_/ \/__/\/___/  \/_/ 
+                                                                                         /\____/                                        
+                                                                                         \_/__/                                         
+
+MOONPI
+  echo "                 MoonPi Launcher v$VERSION"
+  printf "%s" "${RESET}"
+  echo "${YELLOW}      Plug-n-Play Moonlight Embedded Launcher${RESET}"
+  echo
 }
 
 
-
 #— Main -----------------------------------------------------------------------
-
-# Load config
-read_config
-
-# Rebuild custom resolution flags if config was saved with a custom resolution
-if [[ -z "${RESOLUTION_FLAG:-}" && -n "${CUSTOM_WIDTH:-}" && -n "${CUSTOM_HEIGHT:-}" ]]; then
-  width_flag=(-width "$CUSTOM_WIDTH")
-  height_flag=(-height "$CUSTOM_HEIGHT")
-fi
 
 # Detect package version
 PACKAGE="moonpi"
@@ -202,9 +275,20 @@ else
   VERSION="1.0"
 fi
 
+# Load config
+read_config
+
+# Ensure a user config file exists (created from system defaults if missing)
+ensure_user_cfg
+
+# Rebuild custom resolution flags if config was saved with a custom resolution
+if [[ -z "${RESOLUTION_FLAG:-}" && -n "${CUSTOM_WIDTH:-}" && -n "${CUSTOM_HEIGHT:-}" ]]; then
+  width_flag=(-width "$CUSTOM_WIDTH")
+  height_flag=(-height "$CUSTOM_HEIGHT")
+fi
+
 while true; do
   draw_banner
-  echo
   echo "${GREEN} 1)${RESET} Launch MoonPi"
   echo "${GREEN} 2)${RESET} Configure MoonPi"
   echo "${GREEN} 3)${RESET} Pair Moonlight"
@@ -271,6 +355,4 @@ while true; do
       sleep 3
       ;;
   esac
-   # Pause so the user can read the result
-  read -p "Press ENTER to return to menu…"
 done

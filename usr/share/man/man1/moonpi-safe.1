@@ -1,21 +1,48 @@
-.\"                                      Hey, EMACS: -*- nroff -*-
-.\" (C) Copyright 2020 Baeldung <test@test.com>
-.\"
-.TH TEST 1 
+.TH MOONPI-SAFE 1 "2026" "MoonPi" "User Commands"
 .SH NAME
-test \- test application
+moonpi-safe \- clean shutdown wrapper for Moonlight streaming sessions
 .SH SYNOPSIS
-.B test.sh 
+.B moonpi-safe
+.I host-ip
+.RI [ moonlight-args... ]
 .SH DESCRIPTION
-The 
-.B test 
-prints the name.
-.SH SEE ALSO
-.BR echo (1).
-.SH AUTHORS
-The
-.B test 
-script was written by 
-Baeldung <test@test.com>
+.B moonpi-safe
+is a thin wrapper around
+.BR moonlight-stream (1)
+that ensures the remote session is cleanly terminated when the stream exits,
+whether by the user pressing the quit hotkey, an error, or a signal.
 .PP
-This document was written by Baeldung <test@test.com> for Debian.
+It is normally invoked automatically by
+.BR moonpi (1)
+and not called directly by the user.
+.SH BEHAVIOUR
+.TP
+1.
+A SIGINT/SIGTERM trap is installed. If the process receives either signal
+(e.g. from Ctrl-C or systemd stop), it sends
+.B moonlight quit
+to the host before exiting.
+.TP
+2.
+.B moonlight stream
+is started with the supplied arguments. The process is not
+.BR exec (3)\'d
+so the trap remains active for the lifetime of the stream.
+.TP
+3.
+When the stream exits cleanly (e.g. user pressed Shift-Ctrl-Alt-Q inside
+Moonlight),
+.B moonpi-safe
+sends
+.B moonlight quit
+to the host and exits with the same return code as
+.BR moonlight-stream .
+.SH EXIT STATUS
+Returns the exit status of
+.B moonlight stream
+unless a signal was caught, in which case it exits 0.
+.SH SEE ALSO
+.BR moonpi (1),
+.BR moonlight (1)
+.SH AUTHOR
+POONpirate <kellyzekilla@hotmail.com>

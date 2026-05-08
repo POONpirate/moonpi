@@ -1,21 +1,105 @@
-.\"                                      Hey, EMACS: -*- nroff -*-
-.\" (C) Copyright 2020 Baeldung <test@test.com>
-.\"
-.TH TEST 1 
+.TH MOONPI 1 "2026" "MoonPi" "User Commands"
 .SH NAME
-test \- test application
+moonpi \- interactive Moonlight game streaming launcher for Raspberry Pi
 .SH SYNOPSIS
-.B test.sh 
+.B moonpi
 .SH DESCRIPTION
-The 
-.B test 
-prints the name.
-.SH SEE ALSO
-.BR echo (1).
-.SH AUTHORS
-The
-.B test 
-script was written by 
-Baeldung <test@test.com>
+.B moonpi
+is an interactive TUI launcher for Moonlight game streaming on Raspberry Pi OS.
+It reads a configuration file, displays a menu on the active terminal, and
+invokes
+.B moonpi-safe
+to manage the stream session.
 .PP
-This document was written by Baeldung <test@test.com> for Debian.
+MoonPi is designed to run automatically on tty2 at boot via systemd, presenting
+a plug-and-play streaming experience without a desktop environment.
+.SH MENU OPTIONS
+.TP
+.B 1) Launch MoonPi
+Start a Moonlight stream to the configured host using the saved settings.
+Streams are handed off to
+.BR moonpi-safe (1)
+which handles clean shutdown on exit.
+.TP
+.B 2) Configure MoonPi
+Enter the interactive configurator to set the host IP, app name, resolution,
+FPS, bitrate, and local audio. Settings are saved to the user config file
+(or the system config file if running as root).
+.TP
+.B 3) Pair Moonlight
+Pair Moonlight with a Sunshine or NVIDIA GameStream host by IP address.
+.TP
+.B 4) Exit to Console
+Switch back to tty1 (the default console).
+.TP
+.B 5) Launch Desktop
+Switch to tty7 to return to the desktop environment. Only shown when a
+compositor or X server (labwc, wayfire, weston, or Xorg) is detected as running.
+.SH CONFIGURATION
+MoonPi uses a two-layer config system. The system config is loaded first;
+a user config, if present, overlays it.
+.TP
+.I /etc/moonpi/moonpi.conf
+System-wide configuration. Writable by root.
+.TP
+.I $XDG_CONFIG_HOME/moonpi/moonpi.conf
+Per-user configuration (defaults to
+.IR ~/.config/moonpi/moonpi.conf ).
+Written when configuring as a non-root user.
+.SS Config Keys
+.TP
+.B HOST_IP
+IP address of the Sunshine/GameStream host.
+.TP
+.B APP_NAME
+Name of the app or desktop to stream (e.g.\&
+.IR Desktop ).
+.TP
+.B FPS
+Target frame rate passed to Moonlight (e.g.\&
+.IR 60 ).
+.TP
+.B BITRATE
+Stream bitrate in Kbps passed to Moonlight (e.g.\&
+.IR 20000 ).
+.TP
+.B RESOLUTION_FLAG
+Standard resolution shorthand:
+.BR \-720 ,
+.BR \-1080 ,
+or
+.BR \-4k .
+Empty when a custom resolution is set.
+.TP
+.B CUSTOM_WIDTH , CUSTOM_HEIGHT
+Custom stream resolution in pixels. Used when
+.B RESOLUTION_FLAG
+is empty.
+.TP
+.B LOCAL_AUDIO
+Set to
+.B yes
+to enable audio output on the Pi in addition to the host.
+.SH ENVIRONMENT
+.TP
+.B MOONPI_CONFIG_PATH
+Override the system config path (default:
+.IR /etc/moonpi/moonpi.conf ).
+.TP
+.B XDG_CONFIG_HOME
+Override the base directory for the user config (default:
+.IR ~/.config ).
+.SH FILES
+.TP
+.I /etc/moonpi/moonpi.conf
+System configuration file.
+.TP
+.I /usr/lib/systemd/system/moonpi@.service
+Systemd template unit. Instantiated as
+.B moonpi@tty2.service
+at boot.
+.SH SEE ALSO
+.BR moonpi-safe (1),
+.BR moonlight (1)
+.SH AUTHOR
+POONpirate <kellyzekilla@hotmail.com>

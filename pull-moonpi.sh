@@ -19,14 +19,7 @@ DEFAULT_REMOTE_HOST="${DEFAULT_REMOTE_HOST:-}"
 DEFAULT_REMOTE_PATH="${DEFAULT_REMOTE_PATH:-}"
 
 # Files/dirs to skip, relative to the root of the remote path
-Excludes=(
-  ".gitignore"
-  ".gitattributes"
-  ".git"
-  "pull-moonpi.sh"
-  "build-moonpi.sh"
-  "README.md"
-)
+Excludes=( "pull-moonpi.sh" )
 
 # 1) Prompt for SSH details
 read -p "Remote user [${DEFAULT_REMOTE_USER}]: " REMOTE_USER
