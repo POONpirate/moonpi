@@ -287,6 +287,12 @@ if [[ -z "${RESOLUTION_FLAG:-}" && -n "${CUSTOM_WIDTH:-}" && -n "${CUSTOM_HEIGHT
   height_flag=(-height "$CUSTOM_HEIGHT")
 fi
 
+# One-time check: does this system have any desktop compositor installed?
+HAS_DESKTOP=false
+for _cmd in labwc wayfire weston Xorg; do
+  command -v "$_cmd" &>/dev/null && { HAS_DESKTOP=true; break; }
+done
+
 while true; do
   draw_banner
   echo "${GREEN} 1)${RESET} Launch MoonPi"
@@ -294,9 +300,7 @@ while true; do
   echo "${GREEN} 3)${RESET} Pair Moonlight"
   echo "${GREEN} 4)${RESET} Exit to Console"
   
-  # show desktop option if a compositor/X server is running (covers Bookworm/labwc and older/Xorg)
-  if pgrep -x labwc >/dev/null 2>&1 || pgrep -x wayfire >/dev/null 2>&1 || \
-     pgrep -x weston >/dev/null 2>&1 || pgrep -x Xorg   >/dev/null 2>&1; then
+  if [[ $HAS_DESKTOP == true ]]; then
     echo "${GREEN} 5)${RESET} Launch Desktop"
     MAX_OPTION=5
   else
@@ -346,10 +350,16 @@ while true; do
       chvt 1
       ;;
     5)
-      # only valid when MAX_OPTION=5
-      echo "${BLUE}Switching to desktop...${RESET}"
-      sleep 3
-      chvt 7
+      # only valid when HAS_DESKTOP=true
+      if pgrep -x labwc >/dev/null 2>&1 || pgrep -x wayfire >/dev/null 2>&1 || \
+         pgrep -x weston >/dev/null 2>&1 || pgrep -x Xorg   >/dev/null 2>&1; then
+        echo "${BLUE}Switching to desktop...${RESET}"
+        sleep 1
+        chvt 7
+      else
+        echo "${YELLOW}Desktop is still starting up, please try again in a moment.${RESET}"
+        sleep 3
+      fi
       ;;
     *)
       echo "${YELLOW}Invalid: '$action'${RESET}"
