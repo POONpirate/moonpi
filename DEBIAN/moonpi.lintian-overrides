@@ -2,3 +2,7 @@
 # (e.g. moonpi@tty2.service from moonpi@.service). systemctl is called directly
 # as the only reliable alternative.
 moonpi binary: maintainer-script-calls-systemctl
+
+# The desktop shortcut uses sudo to switch to TTY2 (chvt 2). sudo is a standard
+# system utility, not a package we ship.
+moonpi binary: desktop-command-not-in-package sudo [usr/share/applications/moonpi.desktop]

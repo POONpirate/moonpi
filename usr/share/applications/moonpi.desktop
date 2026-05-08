@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=MoonPi
+Comment=Switch to MoonPi on TTY2
+Exec=sudo -n chvt 2
+Icon=video-display
+Terminal=false
+Categories=Game;

@@ -13,6 +13,9 @@ usr/lib/systemd/system/moonpi@.service          usr/lib/systemd/system/
 usr/lib/systemd/system/switch-to-tty2.service   usr/lib/systemd/system/
 debian/66-moonpi.preset                         usr/lib/systemd/system-preset/
 
+# desktop shortcut
+usr/share/applications/moonpi.desktop                usr/share/applications/
+
 # manpages
 usr/share/man/man1/moonpi.1                     usr/share/man/man1/
 usr/share/man/man1/moonpi-safe.1                usr/share/man/man1/
