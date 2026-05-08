@@ -4,6 +4,6 @@ Type=Application
 Name=MoonPi
 Comment=Switch to MoonPi on TTY2
 Exec=sudo -n chvt 2
-Icon=video-display
+Icon=moonpi
 Terminal=false
 Categories=Game;

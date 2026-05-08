@@ -16,6 +16,9 @@ debian/66-moonpi.preset                         usr/lib/systemd/system-preset/
 # desktop shortcut
 usr/share/applications/moonpi.desktop                usr/share/applications/
 
+# icon
+usr/share/icons/hicolor/64x64/apps/moonpi.png        usr/share/icons/hicolor/64x64/apps/
+
 # manpages
 usr/share/man/man1/moonpi.1                     usr/share/man/man1/
 usr/share/man/man1/moonpi-safe.1                usr/share/man/man1/
