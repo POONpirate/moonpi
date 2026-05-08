@@ -6,3 +6,8 @@ moonpi binary: maintainer-script-calls-systemctl
 # The desktop shortcut uses sudo to switch to TTY2 (chvt 2). sudo is a standard
 # system utility, not a package we ship.
 moonpi binary: desktop-command-not-in-package sudo [usr/share/applications/moonpi.desktop]
+
+# switch-to-tty2.service uses WantedBy=moonpi@tty2.service so it activates
+# immediately when moonpi starts, without waiting for graphical.target.
+# This is intentional — the service has no dependency on the graphical stack.
+moonpi binary: systemd-service-file-refers-to-unusual-wantedby-target moonpi@tty2.service [usr/lib/systemd/system/switch-to-tty2.service]
