@@ -9,6 +9,20 @@ case "$1" in
     printf 'ALL ALL=(root) NOPASSWD: /usr/bin/chvt 2\nmoonpi ALL=(root) NOPASSWD: /usr/bin/tee /dev/tty1\n' > /etc/sudoers.d/moonpi
     chmod 440 /etc/sudoers.d/moonpi
 
+    # Add chvt 2 to the labwc system autostart so moonpi claims TTY2 immediately
+    # after the compositor finishes initialising, with no external polling needed.
+    # Insert before lxsession-xdg-autostart if present (it blocks, so anything
+    # after it never runs), otherwise append.
+    LABWC_AUTOSTART=/etc/xdg/labwc/autostart
+    mkdir -p "$(dirname "$LABWC_AUTOSTART")"
+    if ! grep -q '# moonpi' "$LABWC_AUTOSTART" 2>/dev/null; then
+      if grep -q 'lxsession-xdg-autostart' "$LABWC_AUTOSTART" 2>/dev/null; then
+        sed -i '/lxsession-xdg-autostart/i sudo -n chvt 2 \&  # moonpi' "$LABWC_AUTOSTART"
+      else
+        printf 'sudo -n chvt 2 &  # moonpi\n' >> "$LABWC_AUTOSTART"
+      fi
+    fi
+
     # deb-systemd-helper does not support template unit instances —
     # systemctl is used directly (see debian/moonpi.lintian-overrides)
     if [ -d /run/systemd/system ]; then
@@ -20,6 +34,16 @@ case "$1" in
     else
       deb-systemd-helper enable moonpi@tty2.service    || true
       deb-systemd-helper enable switch-to-tty2.service || true
+    fi
+
+    # If a desktop compositor is already running, switch to TTY2 immediately.
+    # On desktop systems the switch-to-tty2 service is skipped, and the labwc
+    # autostart only fires on next boot, so we handle the install-time case here.
+    if pgrep -x labwc   >/dev/null 2>&1 || \
+       pgrep -x wayfire >/dev/null 2>&1 || \
+       pgrep -x weston  >/dev/null 2>&1 || \
+       pgrep -x Xorg    >/dev/null 2>&1; then
+      chvt 2 || true
     fi
     ;;
 esac

@@ -6,6 +6,12 @@ case "$1" in
     # Remove the sudoers rule for the desktop shortcut
     rm -f /etc/sudoers.d/moonpi
 
+    # Remove the chvt 2 line moonpi added to the labwc autostart
+    LABWC_AUTOSTART=/etc/xdg/labwc/autostart
+    if [ -f "$LABWC_AUTOSTART" ]; then
+      sed -i '/# moonpi$/d' "$LABWC_AUTOSTART"
+    fi
+
     # Switch back to desktop (tty7) if a compositor/X server is running, otherwise fall back to tty1
     if fuser /dev/tty7 >/dev/null 2>&1 || \
        pgrep -x labwc >/dev/null 2>&1 || pgrep -x wayfire >/dev/null 2>&1 || \
