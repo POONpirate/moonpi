@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""moonpi-kiosk — enable or disable kiosk VT-lock mode.
+
+Commands:
+  enable   Lock VT switching now and persist across reboots.
+  disable  Unlock VT switching now and remove boot persistence.
+  lock     Lock VT switching now (used internally by the systemd service).
+  unlock   Unlock VT switching now (used internally by the systemd service).
+"""
+
+import fcntl
+import os
+import subprocess
+import sys
+
+VT_LOCKSWITCH   = 0x560B
+VT_UNLOCKSWITCH = 0x560C
+SERVICE         = 'moonpi-kiosk.service'
+
+
+def _ioctl(cmd):
+    fd = os.open('/dev/tty0', os.O_RDWR)
+    try:
+        fcntl.ioctl(fd, cmd)
+    finally:
+        os.close(fd)
+
+
+def cmd_lock():
+    _ioctl(VT_LOCKSWITCH)
+
+
+def cmd_unlock():
+    _ioctl(VT_UNLOCKSWITCH)
+
+
+def cmd_enable():
+    _ioctl(VT_LOCKSWITCH)
+    subprocess.run(['systemctl', 'enable', SERVICE], check=True)
+    print('Kiosk mode enabled. VT switching is locked.')
+
+
+def cmd_disable():
+    _ioctl(VT_UNLOCKSWITCH)
+    subprocess.run(['systemctl', 'disable', SERVICE], check=True)
+    print('Kiosk mode disabled. VT switching is unlocked.')
+
+
+COMMANDS = {
+    'lock':    cmd_lock,
+    'unlock':  cmd_unlock,
+    'enable':  cmd_enable,
+    'disable': cmd_disable,
+}
+
+if os.geteuid() != 0:
+    print(f'Error: {os.path.basename(sys.argv[0])} must be run as root.', file=sys.stderr)
+    sys.exit(1)
+
+if len(sys.argv) != 2 or sys.argv[1] not in COMMANDS:
+    print(f'Usage: {os.path.basename(sys.argv[0])} enable|disable', file=sys.stderr)
+    sys.exit(1)
+
+COMMANDS[sys.argv[1]]()

@@ -3,6 +3,15 @@ set -e
 
 case "$1" in
   remove|purge)
+    # Disable kiosk mode if active so VT switching is restored before removal
+    if systemctl is-active --quiet moonpi-kiosk.service; then
+      moonpi-kiosk disable || true
+    fi
+    if [ -d /run/systemd/system ]; then
+      systemctl stop    moonpi-kiosk.service || true
+      systemctl disable moonpi-kiosk.service || true
+    fi
+
     # Remove the sudoers rule for the desktop shortcut
     rm -f /etc/sudoers.d/moonpi
 

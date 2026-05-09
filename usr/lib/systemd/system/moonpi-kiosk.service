@@ -1,0 +1,20 @@
+[Unit]
+Description=MoonPi Kiosk VT Lock
+After=moonpi@tty2.service
+Wants=moonpi@tty2.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Wait up to 30s for TTY2 to become the active VT before locking,
+# so the initial chvt calls from moonpi and labwc autostart complete first.
+ExecStartPre=/bin/bash -c '\
+  for i in $(seq 1 30); do \
+    [ "$(cat /sys/class/tty/tty0/active 2>/dev/null)" = "tty2" ] && exit 0; \
+    sleep 1; \
+  done; exit 1'
+ExecStart=/usr/bin/moonpi-kiosk lock
+ExecStop=/usr/bin/moonpi-kiosk unlock
+
+[Install]
+WantedBy=multi-user.target

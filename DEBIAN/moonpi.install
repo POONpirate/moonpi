@@ -7,9 +7,11 @@ etc/moonpi/moonpi.conf                         etc/moonpi/
 # binaries
 usr/bin/moonpi                                  usr/bin/
 usr/bin/moonpi-safe                             usr/bin/
+usr/bin/moonpi-kiosk                            usr/bin/
 
 # systemd units
 usr/lib/systemd/system/moonpi@.service          usr/lib/systemd/system/
+usr/lib/systemd/system/moonpi-kiosk.service     usr/lib/systemd/system/
 
 # desktop shortcut
 usr/share/applications/moonpi.desktop                usr/share/applications/
