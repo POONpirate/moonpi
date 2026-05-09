@@ -3,9 +3,11 @@ set -e
 
 case "$1" in
   remove|purge)
-    # Disable kiosk mode if active so VT switching is restored before removal
-    if systemctl is-active --quiet moonpi-kiosk.service; then
-      moonpi-kiosk disable || true
+    # Release the VT lock and stop the kiosk service if active.
+    # We call moonpi-kiosk unlock directly (not disable) to avoid
+    # triggering a moonpi restart mid-removal which would hang apt.
+    if systemctl is-active --quiet moonpi-kiosk.service 2>/dev/null; then
+      moonpi-kiosk unlock || true
     fi
     if [ -d /run/systemd/system ]; then
       systemctl stop    moonpi-kiosk.service || true

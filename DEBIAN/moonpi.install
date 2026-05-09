@@ -22,3 +22,4 @@ usr/share/icons/hicolor/64x64/apps/moonpi.png        usr/share/icons/hicolor/64x
 # manpages
 usr/share/man/man1/moonpi.1                     usr/share/man/man1/
 usr/share/man/man1/moonpi-safe.1                usr/share/man/man1/
+usr/share/man/man8/moonpi-kiosk.8               usr/share/man/man8/

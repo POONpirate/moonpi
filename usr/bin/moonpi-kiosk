@@ -16,6 +16,7 @@ import sys
 VT_LOCKSWITCH   = 0x560B
 VT_UNLOCKSWITCH = 0x560C
 SERVICE         = 'moonpi-kiosk.service'
+MOONPI_SERVICE  = 'moonpi@tty2.service'
 
 
 def _ioctl(cmd):
@@ -28,6 +29,9 @@ def _ioctl(cmd):
 
 def cmd_lock():
     _ioctl(VT_LOCKSWITCH)
+    # Restart moonpi so it redraws immediately with kiosk options hidden.
+    # This matters at boot where moonpi is already running before the service activates.
+    subprocess.run(['systemctl', 'restart', MOONPI_SERVICE], check=False)
 
 
 def cmd_unlock():
@@ -35,14 +39,19 @@ def cmd_unlock():
 
 
 def cmd_enable():
-    _ioctl(VT_LOCKSWITCH)
     subprocess.run(['systemctl', 'enable', SERVICE], check=True)
+    subprocess.run(['/usr/bin/chvt', '2'], check=True)
+    # Starting the service runs cmd_lock, which engages the ioctl and restarts
+    # moonpi. The service is then active so moonpi's is-active check returns true.
+    subprocess.run(['systemctl', 'start', SERVICE], check=True)
     print('Kiosk mode enabled. VT switching is locked.')
 
 
 def cmd_disable():
     _ioctl(VT_UNLOCKSWITCH)
     subprocess.run(['systemctl', 'disable', SERVICE], check=True)
+    subprocess.run(['systemctl', 'stop',    SERVICE], check=True)
+    subprocess.run(['systemctl', 'restart', MOONPI_SERVICE], check=True)
     print('Kiosk mode disabled. VT switching is unlocked.')
 
 

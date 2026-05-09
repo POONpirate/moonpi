@@ -1,0 +1,59 @@
+.TH MOONPI\-KIOSK 8 "2025" "moonpi" "MoonPi System Administration"
+.SH NAME
+moonpi\-kiosk \- enable or disable kiosk VT\-lock mode for MoonPi
+.SH SYNOPSIS
+.B moonpi\-kiosk
+.I command
+.SH DESCRIPTION
+.B moonpi\-kiosk
+manages kiosk mode for the MoonPi launcher. When kiosk mode is enabled,
+virtual terminal switching is locked at the kernel level using the
+.B VT_LOCKSWITCH
+ioctl, preventing users from escaping to another TTY via keyboard shortcuts
+(Ctrl+Alt+Fn) or
+.BR chvt (1).
+SSH access is unaffected.
+.PP
+Kiosk mode persists across reboots via a systemd service
+.RB ( moonpi\-kiosk.service ).
+.B moonpi\-kiosk
+must be run as root.
+.SH COMMANDS
+.TP
+.B enable
+Lock VT switching immediately, switch the active console to TTY2, and enable
+.B moonpi\-kiosk.service
+so the lock is re\-engaged automatically on every subsequent boot.
+.TP
+.B disable
+Unlock VT switching immediately, disable
+.B moonpi\-kiosk.service
+so the lock is not re\-engaged on boot, and redraw the MoonPi menu with
+the full set of options restored.
+.TP
+.B lock
+Engage the VT lock ioctl. Used internally by
+.BR moonpi\-kiosk.service .
+.TP
+.B unlock
+Release the VT lock ioctl. Used internally by
+.BR moonpi\-kiosk.service .
+.SH EXAMPLES
+Enable kiosk mode:
+.PP
+.RS
+.B sudo moonpi\-kiosk enable
+.RE
+.PP
+Disable kiosk mode:
+.PP
+.RS
+.B sudo moonpi\-kiosk disable
+.RE
+.SH SEE ALSO
+.BR moonpi (1),
+.BR moonpi\-safe (1),
+.BR chvt (1),
+.BR systemctl (1)
+.SH AUTHOR
+POONpirate <kellyzekilla@hotmail.com>

@@ -298,16 +298,22 @@ done
 _chvt_done=false
 
 while true; do
+  KIOSK_ACTIVE=false
+  systemctl is-active --quiet moonpi-kiosk.service 2>/dev/null && KIOSK_ACTIVE=true
+
   draw_banner
   echo "${GREEN} 1)${RESET} Launch MoonPi"
   echo "${GREEN} 2)${RESET} Configure MoonPi"
   echo "${GREEN} 3)${RESET} Pair Moonlight"
-  echo "${GREEN} 4)${RESET} Exit to Console"
-  
-  if [[ $HAS_DESKTOP == true ]]; then
+
+  if [[ $KIOSK_ACTIVE == true ]]; then
+    MAX_OPTION=3
+  elif [[ $HAS_DESKTOP == true ]]; then
+    echo "${GREEN} 4)${RESET} Exit to Console"
     echo "${GREEN} 5)${RESET} Launch Desktop"
     MAX_OPTION=5
   else
+    echo "${GREEN} 4)${RESET} Exit to Console"
     MAX_OPTION=4
   fi
 
