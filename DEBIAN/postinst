@@ -28,12 +28,9 @@ case "$1" in
     if [ -d /run/systemd/system ]; then
       systemctl daemon-reload                        || true
       systemctl enable moonpi@tty2.service           || true
-      systemctl enable switch-to-tty2.service        || true
       systemctl start  moonpi@tty2.service           || true
-      systemctl start  switch-to-tty2.service        || true
     else
-      deb-systemd-helper enable moonpi@tty2.service    || true
-      deb-systemd-helper enable switch-to-tty2.service || true
+      deb-systemd-helper enable moonpi@tty2.service  || true
     fi
 
     # If a desktop compositor is already running, switch to TTY2 immediately.

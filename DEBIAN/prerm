@@ -24,14 +24,11 @@ case "$1" in
     # deb-systemd-helper does not support template unit instances —
     # systemctl is used directly (see debian/moonpi.lintian-overrides)
     if [ -d /run/systemd/system ]; then
-      systemctl stop    moonpi@tty2.service    || true
-      systemctl disable moonpi@tty2.service    || true
-      systemctl stop    switch-to-tty2.service || true
-      systemctl disable switch-to-tty2.service || true
-      systemctl daemon-reload                  || true
+      systemctl stop    moonpi@tty2.service || true
+      systemctl disable moonpi@tty2.service || true
+      systemctl daemon-reload               || true
     else
-      deb-systemd-helper disable moonpi@tty2.service    || true
-      deb-systemd-helper disable switch-to-tty2.service || true
+      deb-systemd-helper disable moonpi@tty2.service || true
     fi
     ;;
 esac

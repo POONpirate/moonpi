@@ -293,6 +293,10 @@ for _cmd in labwc wayfire weston Xorg; do
   command -v "$_cmd" &>/dev/null && { HAS_DESKTOP=true; break; }
 done
 
+# On headless systems we claim TTY2 ourselves after the first menu draw,
+# so the user lands on an already-rendered screen rather than a blank TTY.
+_chvt_done=false
+
 while true; do
   draw_banner
   echo "${GREEN} 1)${RESET} Launch MoonPi"
@@ -305,6 +309,11 @@ while true; do
     MAX_OPTION=5
   else
     MAX_OPTION=4
+  fi
+
+  if [[ $_chvt_done == false && $HAS_DESKTOP == false ]]; then
+    chvt 2
+    _chvt_done=true
   fi
 
   read -p "${BLUE}Choose [1–${MAX_OPTION}, default:1]: ${RESET}" action
